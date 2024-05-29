@@ -1,0 +1,1 @@
+packageSearchIndex = [{"l":"Alle Packages","u":"allpackages-index.html"},{"l":"bib.local.domain"},{"l":"bib.local.domain.exceptions"},{"l":"bib.local.entities"},{"l":"bib.local.persistence"},{"l":"bib.local.ui.cui"}];updateSearchResults();
