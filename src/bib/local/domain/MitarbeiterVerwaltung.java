@@ -93,5 +93,14 @@ public class MitarbeiterVerwaltung {
         return mitarbeiter;
     }
 
+    public Mitarbeiter findeMitarbeiter(String benutzername, String passwort) {
+        for (Mitarbeiter mitarbeiter : mitarbeiterList) {
+            if (mitarbeiter.getBenutzerkennung().equals(benutzername) && mitarbeiter.getPassword().equals(passwort)) {
+                return mitarbeiter;
+            }
+        }
+        return null;
+    }
+
 }
 

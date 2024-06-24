@@ -201,28 +201,27 @@ public class EShop {
 
 	public WarenkorbVerwaltung getWarenkorbVW() {return warenkorbVerwaltung;}
 
-	public void fuegeArtikelZuWarenkorbHinzu(Artikel artikel, int menge) throws  BestandPasstNichtMitPackungsGroesseException, NichtGenuegendBestandException {
-		warenkorbVerwaltung.ArtikelInWarenkorbLegen(artikel, menge);
+	// Änderungen an den Warenkorb-Methoden, um den aktuellen Kunden zu berücksichtigen
+	public void fuegeArtikelZuWarenkorbHinzu(Kunde kunde, Artikel artikel, int menge) throws  BestandPasstNichtMitPackungsGroesseException, NichtGenuegendBestandException {
+		warenkorbVerwaltung.addToWarenkorb(kunde, artikel, menge);
 	}
 
-	public void fuegeMassengutartikelzuWarenKorbHinzu(Massengutartikel artikel, int menge) throws  BestandPasstNichtMitPackungsGroesseException, NichtGenuegendBestandException {
-		warenkorbVerwaltung.MassengutartikelInWarenkorblegen(artikel, menge);
+
+
+	public void entferneArtikelAusWarenkorb(Kunde kunde, int artikelNummer) throws ArtikelNichtGefundenException, BestandPasstNichtMitPackungsGroesseException, NichtGenuegendBestandException, WarenkorbLeerException {
+		warenkorbVerwaltung.ArtikelInWarenkorbLoeschen(kunde, artikelNummer);
 	}
 
-	public void entferneArtikelAusWarenkorb(int artikelNummer) throws ArtikelNichtGefundenException, BestandPasstNichtMitPackungsGroesseException, NichtGenuegendBestandException, WarenkorbLeerException {
-		warenkorbVerwaltung.ArtikelInWarenkorbLoeschen(artikelNummer);
+	public void leereWarenkorb(Kunde kunde) throws WarenkorbLeerException {
+		warenkorbVerwaltung.WarenkorbLeeren(kunde);
 	}
 
-	public void leereWarenkorb() throws WarenkorbLeerException {
-		warenkorbVerwaltung.WarenkorbLeeren();
+	public void zeigeWarenkorbAn(Kunde kunde) throws WarenkorbLeerException {
+		warenkorbVerwaltung.WarenkorbAnzeigen(kunde);
 	}
 
-	public void zeigeWarenkorbAn() throws WarenkorbLeerException {
-		warenkorbVerwaltung.WarenkorbAnzeigen();
-	}
-
-	public void artikelBestandAendern(Artikel artikel, int neueMenge) throws ArtikelNichtImWarenkorbGefunden {
-		warenkorbVerwaltung.artikelBestandAendern(artikel, neueMenge);
+	public void artikelBestandAendern(Kunde kunde, Artikel artikel, int neueMenge) throws ArtikelNichtImWarenkorbGefunden {
+		warenkorbVerwaltung.artikelBestandAendern(kunde, artikel, neueMenge);
 	}
 
 	public void RechnungAusgeben() {
@@ -236,7 +235,13 @@ public class EShop {
 			System.out.println("Rechnung für Kunde: " + KundeName);
 			System.out.println("Adresse: " + KundeStrasse + ", " + KundePlz + " " + KundeWohnort);
 
-			double totalPrice = warenkorbVerwaltung.getTotalPreis();
+            Warenkorb warenkorb = kunde.getWarenkorb();  // ÄNDERUNG: Kunden-spezifischen Warenkorb verwenden
+			List<WarenkorbEintrag> eintraege = warenkorb.getEintraege();  // ÄNDERUNG: Warenkorb-Einträge des Kunden durchlaufen
+			System.out.println("Sie Haben gekauft: ");
+			for (WarenkorbEintrag w : eintraege) {
+				System.out.println(w.getArtikel().getBezeichnung() + "Menge: " + w.getMenge() + "Preis: " + w.getTotalPreis());
+			}
+            double totalPrice = warenkorbVerwaltung.getTotalPreis(kunde);
 			Rechnung rechnung = new Rechnung(kunde, totalPrice);
 			rechnung.printRechnung();
             try {
@@ -244,7 +249,24 @@ public class EShop {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-			warenkorbVerwaltung.warenkorbAbschliessen();
+			warenkorbVerwaltung.warenkorbAbschliessen(kunde);
         }
 	}
+
+	public Benutzer login(String benutzername, String passwort) {
+		Kunde kunde = kundenVW.findeKunde(benutzername, passwort);
+		if (kunde != null) {
+			this.benutzer = kunde;
+			return kunde;
+		}
+		Mitarbeiter mitarbeiter = mitarbeiterVW.findeMitarbeiter(benutzername, passwort);
+		if (mitarbeiter != null) {
+			this.benutzer = mitarbeiter;
+			return mitarbeiter;
+		}
+
+		return null;
+	}
+
+
 }

@@ -18,7 +18,8 @@ public class Kunde extends Benutzer{
 	private String strasse = "";
 	private String plz = "";
 	private String wohnort = "";
-	private WarenkorbVerwaltung warenkorbVerwaltung;
+	// private WarenkorbVerwaltung warenkorbVerwaltung;
+	private Warenkorb warenkorb;
 
 
     public Kunde(int Nr, String name, String benutzerkennung, String passwort, String strasse, String plz, String wohnort) {
@@ -29,7 +30,8 @@ public class Kunde extends Benutzer{
 		this.strasse = strasse;
 		this.plz = plz;
 		this.wohnort = wohnort;
-		this.warenkorbVerwaltung = new WarenkorbVerwaltung();
+//		this.warenkorbVerwaltung = new WarenkorbVerwaltung();
+		this.warenkorb = new Warenkorb();
 	}
     
 	// Methoden zum Setzen und Lesen der Kunden-Eigenschaften,
@@ -53,8 +55,8 @@ public class Kunde extends Benutzer{
 
 	public void setWohnort(String wohnort) {wohnort = wohnort;}
 
-	public WarenkorbVerwaltung getWarenkorbVerwaltung() {
-		return warenkorbVerwaltung;
+	public Warenkorb getWarenkorb() {
+		return warenkorb;
 	}
 
 

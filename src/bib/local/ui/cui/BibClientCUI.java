@@ -23,6 +23,8 @@ public class BibClientCUI {
 	private EShop shop;
 	private BufferedReader in;
 
+	private Benutzer eingeloggterBenutzer = null;
+
 	public BibClientCUI(String datei) throws IOException {
 		shop = new EShop(datei);
 		in = new BufferedReader(new InputStreamReader(System.in));
@@ -124,6 +126,7 @@ public class BibClientCUI {
 		Kunde kunde = shop.getKundenVW().sucheKundeBeiBenutzerkennung(benutzerkennung);
 		if (kunde != null && kunde.getPassword().equals(passwort)) {
 			shop.setBenutzer(kunde);
+			eingeloggterBenutzer = kunde;
 			System.out.println("Erfolgreich als Kunde eingeloggt: " + kunde.getName());
 		} else {
 			throw new BenutzerkennungOderPasswortFalschException("Benutzerkennung oder Passwort falsch.");
@@ -134,6 +137,7 @@ public class BibClientCUI {
 		Mitarbeiter mitarbeiter = shop.getMitarbeiterVW().sucheMitarbeiterBeiBenutzerkennung(benutzerkennung);
 		if (mitarbeiter != null && mitarbeiter.getPassword().equals(passwort)) {
 			shop.setBenutzer(mitarbeiter);
+			eingeloggterBenutzer = mitarbeiter;
 			System.out.println("Erfolgreich als Mitarbeiter eingeloggt: " + mitarbeiter.getName());
 		} else {
 			throw new BenutzerkennungOderPasswortFalschException("Benutzerkennung oder Passwort falsch.");
@@ -162,7 +166,7 @@ public class BibClientCUI {
 				fuegeArtikelZuWarenkorbHinzu();
 				break;
 			case "3":
-				shop.zeigeWarenkorbAn();
+				shop.zeigeWarenkorbAn((Kunde)eingeloggterBenutzer); // Type Cast: Wandel den eingeloggten Benutzer in einen Kunden um und rufe zeigeWarenkorbAn auf
 				break;
 			case "4":
 				aendereArtikelbestand();
@@ -171,7 +175,7 @@ public class BibClientCUI {
 				entferneArtikelAusWarenkorb();
 				break;
 			case "6":
-				shop.getWarenkorbVW().WarenkorbLeeren();
+				shop.getWarenkorbVW().WarenkorbLeeren((Kunde)eingeloggterBenutzer);
 				System.out.println("Warenkorb wurde geleert.");
 				break;
 			case "7":
@@ -195,6 +199,19 @@ public class BibClientCUI {
 
 				Artikel artikel = shop.getArtikelVW().sucheArtikel(nr);
 
+				if (artikel instanceof Massengutartikel) {
+					System.out.println("Sie können diesen Artikel nur als Massengut kaufen.");
+					Massengutartikel massengutArtikel = (Massengutartikel) artikel;
+					System.out.println("Menge gleich oder nur in Vielfachen dieser Packungsgröße: " +  massengutArtikel.getPackungsGroesse());
+					int menge = liesIntEingabe();
+					shop.fuegeArtikelZuWarenkorbHinzu((Kunde)eingeloggterBenutzer, massengutArtikel, menge);
+					System.out.println("Artikel wurde zum Warenkorb hinzugefügt.");
+				} else {
+					System.out.print("Menge: ");
+					int menge = liesIntEingabe();
+					shop.fuegeArtikelZuWarenkorbHinzu((Kunde)eingeloggterBenutzer, artikel, menge);
+				}
+				/*
 				if (artikel != null && !artikel.getIstPackung()) {
 					System.out.print("Menge: ");
 					int menge = liesIntEingabe();
@@ -203,16 +220,17 @@ public class BibClientCUI {
 
 				} else if (artikel != null && artikel.getIstPackung()){
 					System.out.println("Sie können diesen Artikel nur als Massengut kaufen.");
-					Massengutartikel artikel_1 = (Massengutartikel) artikel;
-					System.out.println("Menge gleich oder nur in Vielfachen dieser Packungsgröße: " +  artikel_1.getPackungsGroesse());
+					Massengutartikel massengutArtikel = (Massengutartikel) artikel;
+					System.out.println("Menge gleich oder nur in Vielfachen dieser Packungsgröße: " +  massengutArtikel.getPackungsGroesse());
 					System.out.print("Menge: ");
 					int menge = liesIntEingabe();
-					shop.fuegeMassengutartikelzuWarenKorbHinzu((Massengutartikel) artikel, menge);
+					shop.fuegeMassengutartikelzuWarenKorbHinzu(massengutArtikel, menge);
 					System.out.println("Artikel wurde zum Warenkorb hinzugefügt.");
 
 				} else {
 					System.out.println("Artikel mit der Nummer " + nr + " wurde nicht gefunden.");
 				}
+				*/
 				break; // Schleife verlassen nach erfolgreicher Eingabe
 			} catch (FalscheEingabeTypException e) {
 				System.out.println(e.getMessage());
@@ -225,7 +243,7 @@ public class BibClientCUI {
 	}
 
 	private void aendereArtikelbestand() throws IOException, ArtikelNichtGefundenException, WarenkorbLeerException {
-		shop.zeigeWarenkorbAn();
+		shop.zeigeWarenkorbAn((Kunde)eingeloggterBenutzer);
 
 		try {
 			System.out.print("Artikelnummer: ");
@@ -234,7 +252,7 @@ public class BibClientCUI {
 			if (artikel != null) {
 				System.out.print("Neue Menge: ");
 				int neueMenge = liesIntEingabe();
-				shop.artikelBestandAendern(artikel, neueMenge);
+				shop.artikelBestandAendern((Kunde)eingeloggterBenutzer, artikel, neueMenge);
 				System.out.println("Artikelbestand wurde geändert.");
 			} else {
 				System.out.println("Artikel mit der Nummer " + nr + " wurde nicht gefunden.");
@@ -247,11 +265,11 @@ public class BibClientCUI {
 	}
 
 	private void entferneArtikelAusWarenkorb() throws IOException, WarenkorbLeerException {
-		shop.zeigeWarenkorbAn();
+		shop.zeigeWarenkorbAn((Kunde)eingeloggterBenutzer);
 		try {
 			System.out.print("Artikelnummer: ");
 			int nr = liesIntEingabe();
-			shop.entferneArtikelAusWarenkorb(nr);
+			shop.entferneArtikelAusWarenkorb((Kunde)eingeloggterBenutzer, nr);
 			System.out.println("Artikel wurde aus dem Warenkorb entfernt.");
 
 		} catch (FalscheEingabeTypException | BestandPasstNichtMitPackungsGroesseException |

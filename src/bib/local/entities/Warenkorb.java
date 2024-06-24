@@ -1,24 +1,18 @@
 package bib.local.entities;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Warenkorb {
-    private Artikel artikel;
-    private int menge;
+    private List<WarenkorbEintrag> eintraege;
 
-    public Warenkorb(Artikel artikel, int menge) {
-        this.artikel = artikel;
-        this.menge = menge;
+    public Warenkorb() {
+        this.eintraege = new ArrayList<>();
     }
 
-    public Artikel getArtikel() {return artikel;}
-    public int getMenge() {return menge;}
-    public void setMenge(int menge) {this.menge = menge;}
-
-    public double getTotalPreis(){
-        return artikel.getPreis() * menge;
+    public void addEintrag(WarenkorbEintrag eintrag) {
+        this.eintraege.add(eintrag);
     }
 
-    @Override
-    public String toString() {
-        return ("ArtikelNummer: " + artikel.getNummer() + "Artikel: " + artikel.getBezeichnung() + ", Menge: " + menge + ", TotalPreis: " + getTotalPreis());
-    }
+    public List<WarenkorbEintrag> getEintraege() {return eintraege;}
 }

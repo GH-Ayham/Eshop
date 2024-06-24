@@ -1,98 +1,88 @@
 package bib.local.domain;
 
 import bib.local.domain.exceptions.*;
-import bib.local.entities.Artikel;
-import bib.local.entities.Massengutartikel;
-import bib.local.entities.Warenkorb;
+import bib.local.entities.*;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class WarenkorbVerwaltung {
-    private List<Warenkorb> warenkorb;
 
-    public WarenkorbVerwaltung() {
-        this.warenkorb = new ArrayList<>();
-    }
-
-    public void ArtikelInWarenkorbLegen(Artikel artikel, int menge) throws BestandPasstNichtMitPackungsGroesseException, NichtGenuegendBestandException {
-        //Bestand sofort aktulisieren
+    /**
+     * Fügt einen Artikel zum Warenkorb eines Kunden hinzu.
+     *
+     * @param kunde  Der Kunde, dessen Warenkorb aktualisiert werden soll.
+     * @param artikel Der Artikel, der hinzugefügt werden soll.
+     * @param menge   Die Menge des Artikels.
+     */
+    public void addToWarenkorb(Kunde kunde, Artikel artikel, int menge) throws BestandPasstNichtMitPackungsGroesseException, NichtGenuegendBestandException {
+        Warenkorb warenkorb = kunde.getWarenkorb();  // ÄNDERUNG: Kunden-spezifischen Warenkorb verwenden
         artikel.artikelBestandAktualisieren(-menge);
-
-        for (Warenkorb w : warenkorb) {
+        for (WarenkorbEintrag w : warenkorb.getEintraege()) {  // ÄNDERUNG: Warenkorb-Einträge des Kunden durchlaufen
             if (w.getArtikel().getNummer() == artikel.getNummer()) {
                 w.setMenge(w.getMenge() + menge);
                 return;
             }
         }
-        warenkorb.add(new Warenkorb(artikel, menge));
+        warenkorb.addEintrag(new WarenkorbEintrag(artikel, menge));  // ÄNDERUNG: Eintrag in den Kunden-Warenkorb hinzufügen
     }
 
-    public void MassengutartikelInWarenkorblegen(Massengutartikel artikel, int menge) throws BestandPasstNichtMitPackungsGroesseException, NichtGenuegendBestandException {
-        // Bestand sofort aktulisieren
-        artikel.artikelBestandAktualisieren(-menge);
-
-        for (Warenkorb w : warenkorb) {
-            if (w.getArtikel().getNummer() == artikel.getNummer()) {
-                w.setMenge(w.getMenge() + menge);
+    public void ArtikelInWarenkorbLoeschen(Kunde kunde, int artikelNummer) throws BestandPasstNichtMitPackungsGroesseException, NichtGenuegendBestandException, ArtikelNichtGefundenException, WarenkorbLeerException {
+        Warenkorb warenkorb = kunde.getWarenkorb();  // ÄNDERUNG: Kunden-spezifischen Warenkorb verwenden
+        List<WarenkorbEintrag> eintraege = warenkorb.getEintraege();  // ÄNDERUNG: Warenkorb-Einträge des Kunden durchlaufen
+        for (WarenkorbEintrag w : eintraege) {
+            if (w.getArtikel().getNummer() == artikelNummer) {
+                w.getArtikel().artikelBestandAktualisieren(w.getMenge()); // Bestand wiederherstellen
+                eintraege.remove(w);
                 return;
             }
         }
-        warenkorb.add(new Warenkorb(artikel, menge));
+        throw new ArtikelNichtGefundenException(artikelNummer, " im Warenkorb");
     }
 
-    public void ArtikelInWarenkorbLoeschen(int ArtikelNummer) throws BestandPasstNichtMitPackungsGroesseException, NichtGenuegendBestandException, ArtikelNichtGefundenException, WarenkorbLeerException {
-
-        for (Warenkorb w : warenkorb) {
-            if (w.getArtikel().getNummer() == ArtikelNummer) {
-                try {
-                    w.getArtikel().artikelBestandAktualisieren(w.getMenge()); // Bestand wiederherstellen
-                } catch (NichtGenuegendBestandException | BestandPasstNichtMitPackungsGroesseException e) {
-                    throw e; // Ausnahme weiterwerfen
-                }
-                warenkorb.remove(w);
-                return;
-            }
-        }
-        throw new ArtikelNichtGefundenException(ArtikelNummer, " in Warenkorb");
-    }
-
-    public void WarenkorbLeeren() throws WarenkorbLeerException {
-        if (warenkorb.isEmpty()) {
-            throw new WarenkorbLeerException(" In WarenkorbLeeren()");
+    public void WarenkorbLeeren(Kunde kunde) throws WarenkorbLeerException {
+        Warenkorb warenkorb = kunde.getWarenkorb();  // ÄNDERUNG: Kunden-spezifischen Warenkorb verwenden
+        List<WarenkorbEintrag> eintraege = warenkorb.getEintraege();  // ÄNDERUNG: Warenkorb-Einträge des Kunden durchlaufen
+        if (eintraege.isEmpty()) {
+            throw new WarenkorbLeerException(" Im WarenkorbLeeren()");
         }
 
-        for (Warenkorb w : warenkorb) {
+        for (WarenkorbEintrag w : eintraege) {
             try {
                 w.getArtikel().artikelBestandAktualisieren(w.getMenge()); // Bestand wiederherstellen
             } catch (NichtGenuegendBestandException | BestandPasstNichtMitPackungsGroesseException e) {
                 throw new RuntimeException(e);
             }
         }
-        warenkorb.clear();
+        eintraege.clear();  // ÄNDERUNG: Einträge des Kunden-Warenkorbs löschen
     }
 
-    public double getTotalPreis() {
+    public double getTotalPreis(Kunde kunde) {
+        Warenkorb warenkorb = kunde.getWarenkorb();  // ÄNDERUNG: Kunden-spezifischen Warenkorb verwenden
         double preis = 0;
-        for (Warenkorb w : warenkorb) {
+        for (WarenkorbEintrag w : warenkorb.getEintraege()) {  // ÄNDERUNG: Warenkorb-Einträge des Kunden durchlaufen
             preis += w.getTotalPreis();
         }
         return preis;
     }
 
-    public void WarenkorbAnzeigen() throws WarenkorbLeerException {
-        if (warenkorb.isEmpty()) {
+    public List<WarenkorbEintrag> WarenkorbAnzeigen(Kunde kunde) throws WarenkorbLeerException {
+        Warenkorb warenkorb = kunde.getWarenkorb();  // ÄNDERUNG: Kunden-spezifischen Warenkorb verwenden
+        List<WarenkorbEintrag> eintraege = warenkorb.getEintraege();  // ÄNDERUNG: Warenkorb-Einträge des Kunden durchlaufen
+        if (eintraege.isEmpty()) {
             throw new WarenkorbLeerException("");
         }
 
-        for (Warenkorb w : warenkorb) {
+        for (WarenkorbEintrag w : eintraege) {
             System.out.println(w);
         }
-        System.out.println("Total preis: " + getTotalPreis());
+        System.out.println("Total preis: " + getTotalPreis(kunde));  // ÄNDERUNG: Gesamtpreis des Kunden-Warenkorbs anzeigen
+        return eintraege;
     }
 
-    public void artikelBestandAendern(Artikel artikel, int neueMenge) throws ArtikelNichtImWarenkorbGefunden {
-        for (Warenkorb w : warenkorb) {
+    public void artikelBestandAendern(Kunde kunde, Artikel artikel, int neueMenge) throws ArtikelNichtImWarenkorbGefunden {
+        Warenkorb warenkorb = kunde.getWarenkorb();  // ÄNDERUNG: Kunden-spezifischen Warenkorb verwenden
+        List<WarenkorbEintrag> eintraege = warenkorb.getEintraege();  // ÄNDERUNG: Warenkorb-Einträge des Kunden durchlaufen
+        for (WarenkorbEintrag w : eintraege) {
             if (w.getArtikel().getNummer() == artikel.getNummer()) {
                 int alteMenge = w.getMenge(); // Menge im Warenkorb, nicht im Artikelbestand
 
@@ -104,7 +94,7 @@ public class WarenkorbVerwaltung {
                         System.out.println("Fehler beim Aktualisieren des Bestands: " + e.getMessage());
                         return;
                     }
-                    warenkorb.remove(w);
+                    eintraege.remove(w);
                 } else {
                     // Bestandsänderung berechnen
                     int bestandAenderung = alteMenge - neueMenge;
@@ -122,9 +112,8 @@ public class WarenkorbVerwaltung {
         throw new ArtikelNichtImWarenkorbGefunden("Artikel mit Nummer " + artikel.getNummer() + " nicht im Warenkorb gefunden.");
     }
 
-
-    public void warenkorbAbschliessen(){
-        warenkorb.clear(); // Warenkorb wird geleert, aber Bestand wird nicht geändert
+    public void warenkorbAbschliessen(Kunde kunde) {
+        Warenkorb warenkorb = kunde.getWarenkorb();  // ÄNDERUNG: Kunden-spezifischen Warenkorb verwenden
+        warenkorb.getEintraege().clear(); // Warenkorb wird geleert, aber Bestand wird nicht geändert
     }
-
 }

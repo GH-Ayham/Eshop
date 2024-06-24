@@ -96,4 +96,13 @@ public class KundeVerwaltung {
 
     public ArrayList<Kunde> getKundeList(){return new ArrayList<>(kundeList);}
 
+    public Kunde findeKunde(String benutzername, String passwort) {
+        for (Kunde kunde : kundeList) {
+            if (kunde.getBenutzerkennung().equals(benutzername) && kunde.getPassword().equals(passwort)) {
+                return kunde;
+            }
+        }
+        return null;
+    }
+
 }
