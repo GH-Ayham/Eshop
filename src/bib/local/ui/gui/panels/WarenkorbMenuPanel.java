@@ -18,6 +18,7 @@ public class WarenkorbMenuPanel extends JPanel {
     private Kunde eingeloggterKunde;
     private ArtikelInWarenkorbTablePanel artikelInWarenkorbTablePanel;
     private JButton zurueckButton;
+    private JButton rechnungButton;
 
     /**
      * Konstruktor für WarenkorbMenuPanel.
@@ -48,8 +49,16 @@ public class WarenkorbMenuPanel extends JPanel {
             JOptionPane.showMessageDialog(this, "Der Warenkorb ist leer.", "Fehler", JOptionPane.ERROR_MESSAGE);
         }
 
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(new FlowLayout());
+
         zurueckButton = new JButton("Zurück");
-        add(zurueckButton, BorderLayout.SOUTH);
+        rechnungButton = new JButton("Rechnung anzeigen");
+
+        buttonPanel.add(zurueckButton);
+        buttonPanel.add(rechnungButton);
+
+        add(buttonPanel, BorderLayout.SOUTH);
     }
 
     /**
@@ -60,5 +69,11 @@ public class WarenkorbMenuPanel extends JPanel {
      */
     private void setupEvents(CardLayout cardLayout, JPanel mainPanel) {
         zurueckButton.addActionListener(e -> cardLayout.show(mainPanel, "kundeMenu"));
+
+        rechnungButton.addActionListener(e -> {
+            JPanel rechnungPanel = new RechnungPanel(shop, eingeloggterKunde, cardLayout, mainPanel);
+            mainPanel.add(rechnungPanel, "rechnung");
+            cardLayout.show(mainPanel, "rechnung");
+        });
     }
 }
