@@ -112,6 +112,14 @@ public class RegisterPanel extends JPanel {
                 try {
                     Kunde kunde = shop.registriereKunde(name, benutzerkennung, passwort, strasse, plz, wohnort);
                     shop.schreibeKunde();
+
+                    nameText.setText("");
+                    userText.setText("");
+                    passText.setText("");
+                    strasseText.setText("");
+                    plzText.setText("");
+                    wohnortText.setText("");
+
                     JOptionPane.showMessageDialog(null, "Registrierung erfolgreich: " + kunde.getName());
                 } catch (NutzerExistiertBereitsException ex) {
                     JOptionPane.showMessageDialog(null, "Fehler: " + ex.getMessage(), "Fehler", JOptionPane.ERROR_MESSAGE);

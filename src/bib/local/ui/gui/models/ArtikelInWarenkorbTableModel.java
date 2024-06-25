@@ -1,5 +1,7 @@
 package bib.local.ui.gui.models;
 
+import bib.local.entities.Artikel;
+import bib.local.entities.Kunde;
 import bib.local.entities.WarenkorbEintrag;
 
 import javax.swing.table.AbstractTableModel;
@@ -10,6 +12,7 @@ public class ArtikelInWarenkorbTableModel extends AbstractTableModel {
     private List<WarenkorbEintrag> artikelListe;
     private List<Boolean> selectedList;
     private String[] columnNames = {"Auswählen", "Nummer", "Bezeichnung", "Menge", "Preis"};
+
 
     /**
      * Konstruktor für ArtikelInWarenkorbTableModel mit der gegebenen Artikelliste.
@@ -23,7 +26,6 @@ public class ArtikelInWarenkorbTableModel extends AbstractTableModel {
             selectedList.add(false); // Initiale Checkbox-Werte
         }
     }
-
 
     @Override
     public int getRowCount() {
@@ -91,6 +93,15 @@ public class ArtikelInWarenkorbTableModel extends AbstractTableModel {
         artikelListe.remove(rowIndex);
         selectedList.remove(rowIndex);
         fireTableRowsDeleted(rowIndex, rowIndex);
+    }
+
+    public void setArtikels(List<WarenkorbEintrag> artikelListe) {
+        this.artikelListe = artikelListe;
+        this.selectedList = new ArrayList<>(artikelListe.size());
+        for (int i = 0; i < artikelListe.size(); i++) {
+            selectedList.add(Boolean.FALSE); // Reset checkbox values
+        }
+        fireTableDataChanged();
     }
 
     /**

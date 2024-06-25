@@ -58,7 +58,7 @@ public class ArtikelTablePanel extends JPanel {
         add(sortPanel, BorderLayout.NORTH);
 
         // Add action listeners
-        sortNumberButton.addActionListener(e -> sortArtikelsByNumber());
+        sortNumberButton.addActionListener(e -> sortArtikelsByNumber()); // e -> ist ein Lambda-Ausdruck um einen ActionListener zu definieren.
         sortDescriptionButton.addActionListener(e -> sortArtikelsByDescription());
 
         // Load initial data

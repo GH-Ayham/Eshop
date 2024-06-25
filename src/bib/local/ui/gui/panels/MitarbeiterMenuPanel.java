@@ -1,29 +1,30 @@
 package bib.local.ui.gui.panels;
 
 import bib.local.domain.EShop;
+import bib.local.domain.exceptions.ArtikelNichtGefundenException;
+import bib.local.domain.exceptions.FalscheEingabeTypException;
 import bib.local.entities.Artikel;
-import bib.local.entities.Benutzer;
 import bib.local.entities.Mitarbeiter;
-import bib.local.ui.gui.panels.AddArticlePanel;
-import bib.local.ui.gui.panels.ArtikelTablePanel;
-import bib.local.ui.gui.panels.BearbeiteArtikelPanel;
-import bib.local.ui.gui.panels.RegisterMitarbeiterPanel;
+import bib.local.entities.WarenkorbEintrag;
 import bib.local.ui.gui.models.ArtikelTableModel;
+
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.IOException;
+import java.util.List;
 
 /**
  * Panel zum Verwalten von Artikeln und Mitarbeitern im Shop.
  */
-public class MitarbeiterMenuPanel extends JPanel implements AddArticlePanel.AddArticleListener {
+public class MitarbeiterMenuPanel extends JPanel implements AddArticlePanel.AddArticleListener, RegisterMitarbeiterPanel.RegisterMitarbeiterListener {
     private EShop shop;
     private ArtikelTablePanel artikelTablePanel;
     private ArtikelTableModel tableModel;
     private Mitarbeiter eingeloggterMitarbeiter;
+    private JButton editArticleButton;
+    private JButton deleteArticleButton;
+    private JButton logoutButton;
 
     /**
      * Konstruktor für MitarbeiterMenuPanel.
@@ -35,6 +36,16 @@ public class MitarbeiterMenuPanel extends JPanel implements AddArticlePanel.AddA
     public MitarbeiterMenuPanel(CardLayout cardLayout, JPanel mainPanel, EShop shop, Mitarbeiter eingeloggterMitarbeiter) {
         this.shop = shop;
         this.eingeloggterMitarbeiter = eingeloggterMitarbeiter;
+        setupUI();
+        setupEvents(cardLayout, mainPanel);
+    }
+
+
+
+    /**
+     * Initialisiert die Benutzeroberfläche.
+     */
+    private void setupUI() {
         setLayout(new BorderLayout());
 
         // Oberer Bereich für Begrüßung und Buttons
@@ -45,37 +56,13 @@ public class MitarbeiterMenuPanel extends JPanel implements AddArticlePanel.AddA
 
         JPanel buttonPanel = new JPanel(new GridLayout(1, 3, 10, 10));
 
-        JButton editArticleButton = new JButton("Artikel bearbeiten");
-        editArticleButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    bearbeiteArtikel();
-                } catch (IOException ex) {
-                    JOptionPane.showMessageDialog(null, "Fehler: " + ex.getMessage(), "Fehler", JOptionPane.ERROR_MESSAGE);
-                }
-            }
-        });
+        editArticleButton = new JButton("Artikel bearbeiten");
         buttonPanel.add(editArticleButton);
 
-        JButton deleteArticleButton = new JButton("Artikel löschen");
-        deleteArticleButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                deleteSelectedArtikels();
-            }
-        });
+        deleteArticleButton = new JButton("Artikel löschen");
         buttonPanel.add(deleteArticleButton);
 
-        JButton logoutButton = new JButton("Ausloggen");
-        logoutButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                shop.setBenutzer(null);
-                JOptionPane.showMessageDialog(null, "Sie sind ausgeloggt.");
-                cardLayout.show(mainPanel, "login");
-            }
-        });
+        logoutButton = new JButton("Ausloggen");
         buttonPanel.add(logoutButton);
 
         topPanel.add(buttonPanel, BorderLayout.EAST);
@@ -83,14 +70,8 @@ public class MitarbeiterMenuPanel extends JPanel implements AddArticlePanel.AddA
         add(topPanel, BorderLayout.NORTH);
 
         // Linkes Panel für RegisterMitarbeiterPanel
-        RegisterMitarbeiterPanel registerPanel = new RegisterMitarbeiterPanel(shop, new RegisterMitarbeiterPanel.RegisterMitarbeiterListener() {
-            @Override
-            public void onEmployeeRegistered(Mitarbeiter mitarbeiter) {
-                // Aktionen nach der Registrierung des Mitarbeiters
-            }
-        });
+        RegisterMitarbeiterPanel registerPanel = new RegisterMitarbeiterPanel(shop, this);
         JPanel leftPanel = new JPanel(new BorderLayout());
-        //leftPanel.add(new JLabel("Neue Mitarbeiter registrieren", SwingConstants.CENTER), BorderLayout.NORTH);
         leftPanel.add(registerPanel, BorderLayout.CENTER);
         add(leftPanel, BorderLayout.WEST);
 
@@ -104,24 +85,67 @@ public class MitarbeiterMenuPanel extends JPanel implements AddArticlePanel.AddA
         add(new JScrollPane(artikelTablePanel), BorderLayout.EAST);
     }
 
+    /**
+     * Legt die Ereignishandler für die Komponenten fest.
+     *
+     * @param cardLayout der CardLayout-Manager
+     * @param mainPanel  das Hauptpanel, das alle Kartenpanels enthält
+     */
+    private void setupEvents(CardLayout cardLayout, JPanel mainPanel) {
+        editArticleButton.addActionListener(e -> {
+            try {
+                bearbeiteArtikel();
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(null, "Fehler: " + ex.getMessage(), "Fehler", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        deleteArticleButton.addActionListener(e -> {
+            try {
+                loescheArtikel();
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+        });
+
+        logoutButton.addActionListener(e -> {
+            shop.setBenutzer(null);
+            JOptionPane.showMessageDialog(null, "Sie sind ausgeloggt.");
+            cardLayout.show(mainPanel, "login");
+        });
+    }
 
     @Override
     public void onArticleAdded(Artikel artikel) {
         artikelTablePanel.updateArtikelliste(shop.gibAlleArtikel());
     }
 
-    private void deleteSelectedArtikels() {
-        for (int i = tableModel.getRowCount() - 1; i >= 0; i--) {
-            Boolean isSelected = (Boolean) tableModel.getValueAt(i, 0);
-            if (isSelected) {
-                Artikel artikel = tableModel.getArtikelAt(i);
-                try {
-                    shop.loescheArtikel(artikel.getNummer());
-                    tableModel.removeArtikel(i);
-                } catch (Exception e) {
-                    JOptionPane.showMessageDialog(this, "Fehler beim Löschen des Artikels: " + e.getMessage(), "Fehler", JOptionPane.ERROR_MESSAGE);
-                }
-            }
+    @Override
+    public void onEmployeeRegistered(Mitarbeiter mitarbeiter) {
+        // Aktionen nach der Registrierung des Mitarbeiters
+        JOptionPane.showMessageDialog(this, "Mitarbeiter erfolgreich registriert: " + mitarbeiter.getName());
+    }
+
+    private void loescheArtikel() throws IOException{
+        int selectedRow = artikelTablePanel.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Bitte wählen Sie einen Artikel aus.", "Fehler", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        Artikel artikel = artikelTablePanel.getModel().getArtikelAt(selectedRow);
+        int artikelNr = artikel.getNummer();
+
+        try{
+            shop.loescheArtikel(artikelNr);
+            //shop.schreibeArtikel();
+            JOptionPane.showMessageDialog(this, "Artikel wurde erfolgreich gelöscht.");
+
+            // Aktualisieren der Tabelle nach der Entfernung
+            List<Artikel> aktualisierteArtikelListe = shop.gibAlleArtikel();
+            artikelTablePanel.updateArtikelliste(aktualisierteArtikelListe);
+
+        } catch (ArtikelNichtGefundenException e) {
+            JOptionPane.showMessageDialog(this, e.getMessage(), "Fehler", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -131,16 +155,9 @@ public class MitarbeiterMenuPanel extends JPanel implements AddArticlePanel.AddA
      * @throws IOException Falls ein Fehler beim Schreiben der Artikeldaten auftritt.
      */
     private void bearbeiteArtikel() throws IOException {
-        int selectedRow = -1;
-        for (int i = 0; i < tableModel.getRowCount(); i++) {
-            if ((Boolean) tableModel.getValueAt(i, 0)) {
-                selectedRow = i;
-                break;
-            }
-        }
-
+        int selectedRow = artikelTablePanel.getSelectedRow();
         if (selectedRow == -1) {
-            JOptionPane.showMessageDialog(this, "Bitte wählen Sie einen Artikel zum Bearbeiten aus.", "Fehler", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Bitte wählen Sie einen Artikel aus.", "Fehler", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
@@ -148,7 +165,9 @@ public class MitarbeiterMenuPanel extends JPanel implements AddArticlePanel.AddA
         BearbeiteArtikelPanel bearbeitePanel = new BearbeiteArtikelPanel(shop, artikel);
         boolean updated = bearbeitePanel.showDialog();
         if (updated) {
-            tableModel.fireTableRowsUpdated(selectedRow, selectedRow);
+            // Aktualisieren der Tabelle nach der Entfernung
+            List<Artikel> aktualisierteArtikelListe = shop.gibAlleArtikel();
+            artikelTablePanel.updateArtikelliste(aktualisierteArtikelListe);
         }
     }
 

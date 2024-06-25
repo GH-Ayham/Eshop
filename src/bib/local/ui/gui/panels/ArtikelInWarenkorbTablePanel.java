@@ -1,5 +1,9 @@
 package bib.local.ui.gui.panels;
 
+import bib.local.domain.EShop;
+import bib.local.domain.exceptions.WarenkorbLeerException;
+import bib.local.entities.Artikel;
+import bib.local.entities.Kunde;
 import bib.local.entities.WarenkorbEintrag;
 import bib.local.ui.gui.models.ArtikelInWarenkorbTableModel;
 
@@ -9,6 +13,8 @@ import java.awt.*;
 import java.util.List;
 
 public class ArtikelInWarenkorbTablePanel extends JPanel {
+    private EShop shop;
+    private Kunde eingeloggterKunde;
     private ArtikelInWarenkorbTableModel tableModel;
     private JTable table;
 
@@ -17,7 +23,9 @@ public class ArtikelInWarenkorbTablePanel extends JPanel {
      *
      * @param artikelListe die Liste der Artikel im Warenkorb
      */
-    public ArtikelInWarenkorbTablePanel(List<WarenkorbEintrag> artikelListe) {
+    public ArtikelInWarenkorbTablePanel(List<WarenkorbEintrag> artikelListe, EShop shop, Kunde eingeloggterKunde) throws WarenkorbLeerException {
+        this.shop = shop;
+        this.eingeloggterKunde = eingeloggterKunde;
         setLayout(new BorderLayout());
 
         tableModel = new ArtikelInWarenkorbTableModel(artikelListe);
@@ -38,7 +46,11 @@ public class ArtikelInWarenkorbTablePanel extends JPanel {
 
         JScrollPane scrollPane = new JScrollPane(table);
         add(scrollPane, BorderLayout.CENTER);
+
+        // Load initial data
+        updateArtikelliste(shop.getWarenkorbVW().WarenkorbAnzeigen(eingeloggterKunde));
     }
+
 
     /**
      * Gibt das Tabellenmodell für die Artikel im Warenkorb zurück.
@@ -48,6 +60,20 @@ public class ArtikelInWarenkorbTablePanel extends JPanel {
     public ArtikelInWarenkorbTableModel getModel() {
         return tableModel;
     }
+
+    /**
+     * Gibt die ausgewählte Zeile in der Tabelle zurück.
+     *
+     * @return die ausgewählte Zeile.
+     */
+    public int getSelectedRow() {
+        return table.getSelectedRow();
+    }
+
+    public void updateArtikelliste(List<WarenkorbEintrag> artikelListe) {
+        tableModel.setArtikels(artikelListe);
+    }
+
 }
 
 

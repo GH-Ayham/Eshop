@@ -75,7 +75,7 @@ public class LoginPanel extends JPanel {
                         eingeloggterBenutzer = kunde;
                         JOptionPane.showMessageDialog(null, "Login erfolgreich!");
                         mainFrame.zeigeKundeMenuPanel(kunde);
-                        JOptionPane.showMessageDialog(null, shop.getBenutzer().getName());
+                        //JOptionPane.showMessageDialog(null, shop.getBenutzer().getName());
                     } else {
                         Mitarbeiter mitarbeiter = shop.getMitarbeiterVW().findeMitarbeiter(username, password);
                         if (mitarbeiter != null) {
@@ -84,7 +84,7 @@ public class LoginPanel extends JPanel {
                             JOptionPane.showMessageDialog(null, "Login erfolgreich!");
                             mainFrame.zeigeMitarbeiterMenuPanel(mitarbeiter);
                             //cardLayout.show(mainPanel, "mitarbeiterMenu");
-                            JOptionPane.showMessageDialog(null, shop.getBenutzer().getName());
+                            //JOptionPane.showMessageDialog(null, shop.getBenutzer().getName());
                         } else {
                             JOptionPane.showMessageDialog(null, "Benutzername oder Passwort falsch.", "Fehler", JOptionPane.ERROR_MESSAGE);
                         }

@@ -18,7 +18,6 @@ public class BearbeiteArtikelPanel extends JPanel {
     private JTextField bestandField;
     private JTextField preisField;
     private JTextField packungsgroesseField;
-    private JButton saveButton;
     private EShop shop;
     private Artikel artikel;
 
@@ -32,7 +31,7 @@ public class BearbeiteArtikelPanel extends JPanel {
         this.shop = shop;
         this.artikel = artikel;
         setupUI();
-        setupEvents();
+        //setupEvents();
     }
 
     /**
@@ -58,13 +57,11 @@ public class BearbeiteArtikelPanel extends JPanel {
             add(packungsgroesseField);
         }
 
-        saveButton = new JButton("Speichern");
-        add(saveButton);
     }
 
-    /**
+   /* *//**
      * Initialisiert die Ereignis-Listener für das Panel.
-     */
+     *//*
     private void setupEvents() {
         saveButton.addActionListener(new ActionListener() {
             @Override
@@ -72,25 +69,7 @@ public class BearbeiteArtikelPanel extends JPanel {
                 onSaveButtonClick();
             }
         });
-    }
-
-    /**
-     * Aktion, die ausgeführt wird, wenn der Speichern-Button geklickt wird.
-     */
-    private void onSaveButtonClick() {
-        try {
-            artikel.setBezeichnung(bezeichnungField.getText());
-            artikel.setBestand(Integer.parseInt(bestandField.getText()));
-            artikel.setPreis(Double.parseDouble(preisField.getText()));
-            if (artikel instanceof Massengutartikel) {
-                ((Massengutartikel) artikel).setPackungsGroesse(Integer.parseInt(packungsgroesseField.getText()));
-            }
-            shop.schreibeArtikel();
-            JOptionPane.showMessageDialog(this, "Artikel wurde erfolgreich aktualisiert.");
-        } catch (NumberFormatException | IOException e) {
-            JOptionPane.showMessageDialog(this, "Ungültige Eingabe. Bitte stellen Sie sicher, dass die Felder korrekt ausgefüllt sind.", "Fehler", JOptionPane.ERROR_MESSAGE);
-        }
-    }
+    }*/
 
     /**
      * Zeigt den Dialog zum Bearbeiten des Artikels an.
@@ -99,6 +78,22 @@ public class BearbeiteArtikelPanel extends JPanel {
      */
     public boolean showDialog() {
         int result = JOptionPane.showConfirmDialog(this, this, "Artikel bearbeiten", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-        return result == JOptionPane.OK_OPTION;
+        if (result == JOptionPane.OK_OPTION) {
+            try {
+                artikel.setBezeichnung(bezeichnungField.getText());
+                artikel.setBestand(Integer.parseInt(bestandField.getText()));
+                artikel.setPreis(Double.parseDouble(preisField.getText()));
+                if (artikel instanceof Massengutartikel) {
+                    ((Massengutartikel) artikel).setPackungsGroesse(Integer.parseInt(packungsgroesseField.getText()));
+                }
+                shop.schreibeArtikel();
+                JOptionPane.showMessageDialog(this, "Artikel wurde erfolgreich aktualisiert.");
+            } catch (NumberFormatException | IOException e) {
+                JOptionPane.showMessageDialog(this, "Ungültige Eingabe. Bitte stellen Sie sicher, dass die Felder korrekt ausgefüllt sind.", "Fehler", JOptionPane.ERROR_MESSAGE);
+                return false; // Falls eine Ausnahme auftritt, wird false zurückgegeben.
+            }
+            return true; // Wenn alles erfolgreich war, wird true zurückgegeben.
+        }
+        return false; // Wenn der Benutzer auf "Abbrechen" geklickt hat, wird false zurückgegeben.
     }
 }

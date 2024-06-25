@@ -67,12 +67,12 @@ public class RechnungPanel extends JPanel {
         JLabel totalLabel = new JLabel("Gesamtpreis: " + totalPrice);
         add(totalLabel);
 
-        /*try {
+       /* try {
             shop.schreibeArtikel();
         } catch (IOException e) {
             throw new RuntimeException(e);
-        }*/
-
+        }
+        */
         zurueckButton = new JButton("Schließen und zum EShop zurückgehen");
         add(zurueckButton);
 

@@ -4,6 +4,7 @@ import bib.local.domain.EShop;
 import bib.local.domain.exceptions.ArtikelNichtGefundenException;
 import bib.local.domain.exceptions.BestandPasstNichtMitPackungsGroesseException;
 import bib.local.domain.exceptions.NichtGenuegendBestandException;
+import bib.local.domain.exceptions.WarenkorbLeerException;
 import bib.local.entities.Artikel;
 import bib.local.entities.Kunde;
 import bib.local.entities.Massengutartikel;
@@ -21,6 +22,7 @@ public class KundeMenuPanel extends JPanel implements AddArticlePanel.AddArticle
     private JButton addToCartButton;
     private Kunde eingeloggterKunde;
     private JButton warenkorbButton;
+    private JButton logoutButton;
 
 
     /**
@@ -55,13 +57,15 @@ public class KundeMenuPanel extends JPanel implements AddArticlePanel.AddArticle
         add(new JScrollPane(artikelTablePanel), BorderLayout.CENTER);
 
         JPanel buttonPanel = new JPanel();
-        buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.Y_AXIS));
+        buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.X_AXIS));
 
         addToCartButton = new JButton("Zum Warenkorb einfügen");
         warenkorbButton = new JButton("Zum Warenkorb");
+        logoutButton = new JButton("Ausloggen");
 
         buttonPanel.add(addToCartButton);
         buttonPanel.add(warenkorbButton);
+        buttonPanel.add(logoutButton);
 
         add(buttonPanel, BorderLayout.SOUTH);
     }
@@ -77,14 +81,26 @@ public class KundeMenuPanel extends JPanel implements AddArticlePanel.AddArticle
             try {
                 fuegeArtikelZuWarenkorbHinzu();
             } catch (IOException | ArtikelNichtGefundenException ex) {
-                JOptionPane.showMessageDialog(KundeMenuPanel.this, "Fehler: " + ex.getMessage(), "Fehler", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Fehler: " + ex.getMessage(), "Fehler", JOptionPane.ERROR_MESSAGE);
             }
         });
 
         warenkorbButton.addActionListener(e -> {
-            JPanel warenkorbMenuPanel = new WarenkorbMenuPanel(cardLayout, mainPanel, shop, eingeloggterKunde);
-            mainPanel.add(warenkorbMenuPanel, "warenkorbMenu");
-            cardLayout.show(mainPanel, "warenkorbMenu");
+            try {
+                // Versuche, das WarenkorbMenuPanel zu öffnen
+                JPanel warenkorbMenuPanel = new WarenkorbMenuPanel(cardLayout, mainPanel, shop, eingeloggterKunde);
+                mainPanel.add(warenkorbMenuPanel, "warenkorbMenu");
+                cardLayout.show(mainPanel, "warenkorbMenu");
+            } catch (WarenkorbLeerException ex) {
+                // Zeige eine Fehlermeldung und bleibe im KundeMenuPanel
+                JOptionPane.showMessageDialog(mainPanel, "Der Warenkorb ist leer.", "Fehler", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        logoutButton.addActionListener(e -> {
+            shop.setBenutzer(null);
+            JOptionPane.showMessageDialog(null, "Sie sind ausgeloggt");
+            cardLayout.show(mainPanel, "login");
         });
     }
 

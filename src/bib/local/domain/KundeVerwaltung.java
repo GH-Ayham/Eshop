@@ -47,6 +47,7 @@ public class KundeVerwaltung {
 
     public Kunde sucheKundeBeiBenutzerkennung(String benutzerkennung){
         for (Kunde kunde: kundeList){
+            System.out.println("Überprüfe Benutzerkennung: " + kunde.getBenutzerkennung()); // Debugging-Ausgabe
             if (kunde.getBenutzerkennung().equals(benutzerkennung)){
                 return kunde;
             }

@@ -162,11 +162,16 @@ public class EShop {
 		return mitarbeiter;
 	}
 
-	//Kunde registieren
+	// Methode zum Registrieren eines Kunden
 	public Kunde registriereKunde(String name, String benutzerkennung, String passwort, String strasse, String plz, String wohnort) throws NutzerExistiertBereitsException {
+		// Überprüfen, ob die Benutzerkennung bereits existiert
+		if (kundenVW.sucheKundeBeiBenutzerkennung(benutzerkennung) != null) {
+			throw new NutzerExistiertBereitsException("Benutzerkennung " + benutzerkennung + " existiert bereits.");
+		}
+
+		// Neuen Kunden registrieren
 		Kunde kunde = kundenVW.registriereKunde(name, benutzerkennung, passwort, strasse, plz, wohnort);
 		return kunde;
-
 	}
 
 	public ArtikelVerwaltung getArtikelVW(){
@@ -220,7 +225,7 @@ public class EShop {
 		warenkorbVerwaltung.WarenkorbAnzeigen(kunde);
 	}
 
-	public void artikelBestandAendern(Kunde kunde, Artikel artikel, int neueMenge) throws ArtikelNichtImWarenkorbGefunden {
+	public void artikelBestandAendern(Kunde kunde, Artikel artikel, int neueMenge) throws ArtikelNichtImWarenkorbGefunden, BestandPasstNichtMitPackungsGroesseException, NichtGenuegendBestandException {
 		warenkorbVerwaltung.artikelBestandAendern(kunde, artikel, neueMenge);
 	}
 

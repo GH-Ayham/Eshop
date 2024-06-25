@@ -3,6 +3,7 @@ package bib.local.ui.cui;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.List;
 
 import bib.local.domain.exceptions.*;
@@ -22,6 +23,7 @@ public class BibClientCUI {
 
 	private EShop shop;
 	private BufferedReader in;
+	private List<Benutzer> benutzerList = new ArrayList<>();
 
 	private Benutzer eingeloggterBenutzer = null;
 
@@ -73,10 +75,19 @@ public class BibClientCUI {
 		System.out.print("Ihre Wahl: ");
 	}
 
+	// Debbug
+	public void zeigeBenutzerListe() {
+		System.out.println("\nBenutzer:");
+		for (Benutzer benutzer : benutzerList) {
+			System.out.println("Benutzer: " + benutzer.getBenutzerkennung());
+		}
+	}
+
 	private void verarbeiteErstesMenuEingabe(String auswahl) throws IOException, BenutzerkennungOderPasswortFalschException, NutzerExistiertBereitsException {
 		switch (auswahl) {
 			case "1":
-				zeigeLoginMenu();
+				//zeigeLoginMenu();
+				zeigeBenutzerListe();
 				break;
 			case "2":
 				registrierenKundeMenu();
@@ -123,7 +134,7 @@ public class BibClientCUI {
 	}
 
 	private void einloggenAlsKunde(String benutzerkennung, String passwort) throws BenutzerkennungOderPasswortFalschException {
-		Kunde kunde = shop.getKundenVW().sucheKundeBeiBenutzerkennung(benutzerkennung);
+		Benutzer kunde = shop.getKundenVW().sucheKundeBeiBenutzerkennung(benutzerkennung);
 		if (kunde != null && kunde.getPassword().equals(passwort)) {
 			shop.setBenutzer(kunde);
 			eingeloggterBenutzer = kunde;
@@ -192,7 +203,6 @@ public class BibClientCUI {
 	}
 
 	private void fuegeArtikelZuWarenkorbHinzu() throws IOException, ArtikelNichtGefundenException {
-		while (true) {
 			try {
 				System.out.print("Artikelnummer: ");
 				int nr = liesIntEingabe();
@@ -231,7 +241,6 @@ public class BibClientCUI {
 					System.out.println("Artikel mit der Nummer " + nr + " wurde nicht gefunden.");
 				}
 				*/
-				break; // Schleife verlassen nach erfolgreicher Eingabe
 			} catch (FalscheEingabeTypException e) {
 				System.out.println(e.getMessage());
 			} catch (BestandPasstNichtMitPackungsGroesseException e) {
@@ -239,28 +248,62 @@ public class BibClientCUI {
 			} catch (NichtGenuegendBestandException e) {
                 throw new RuntimeException(e);
             }
-        }
+
 	}
 
-	private void aendereArtikelbestand() throws IOException, ArtikelNichtGefundenException, WarenkorbLeerException {
-		shop.zeigeWarenkorbAn((Kunde)eingeloggterBenutzer);
-
-		try {
-			System.out.print("Artikelnummer: ");
-			int nr = liesIntEingabe();
-			Artikel artikel = shop.getArtikelVW().sucheArtikel(nr);
-			if (artikel != null) {
-				System.out.print("Neue Menge: ");
-				int neueMenge = liesIntEingabe();
-				shop.artikelBestandAendern((Kunde)eingeloggterBenutzer, artikel, neueMenge);
-				System.out.println("Artikelbestand wurde geändert.");
-			} else {
-				System.out.println("Artikel mit der Nummer " + nr + " wurde nicht gefunden.");
+	/*private void aendereArtikelbestand() throws IOException, ArtikelNichtGefundenException, WarenkorbLeerException {
+		shop.zeigeWarenkorbAn((Kunde) eingeloggterBenutzer);
+		while (true) {
+			try {
+				System.out.print("Artikelnummer: ");
+				int nr = liesIntEingabe();
+				Artikel artikel = shop.getArtikelVW().sucheArtikel(nr);
+				if (artikel instanceof Massengutartikel) {
+					Massengutartikel massengutArtikel = (Massengutartikel) artikel;
+					System.out.println("Die neue Menge nur in Vielfachen dieser Packungsgröße: " + massengutArtikel.getPackungsGroesse());
+					System.out.print("Neue Menge: ");
+					int neueMenge = liesIntEingabe();
+					shop.artikelBestandAendern((Kunde) eingeloggterBenutzer, massengutArtikel, neueMenge);
+					System.out.println("Artikelbestand wurde geändert.");
+				} else {
+					System.out.print("Neue Menge: ");
+					int neueMenge = liesIntEingabe();
+					shop.artikelBestandAendern((Kunde) eingeloggterBenutzer, artikel, neueMenge);
+					System.out.println("Artikelbestand wurde geändert.");
+				}
+				break;
+			} catch (FalscheEingabeTypException | ArtikelNichtImWarenkorbGefunden e) {
+				System.out.println("Fehler: " + e.getMessage());
+			} catch (BestandPasstNichtMitPackungsGroesseException e) {
+				System.out.println("Fehler beim Aktualisieren des Bestands: " + e.getMessage());
 			}
-
-		} catch (FalscheEingabeTypException | ArtikelNichtImWarenkorbGefunden e) {
-			System.out.println(e.getMessage());
 		}
+	}*/
+
+	private void aendereArtikelbestand() throws IOException, ArtikelNichtGefundenException, WarenkorbLeerException {
+		shop.zeigeWarenkorbAn((Kunde) eingeloggterBenutzer);
+			try {
+				System.out.print("Artikelnummer: ");
+				int nr = liesIntEingabe();
+				Artikel artikel = shop.getArtikelVW().sucheArtikel(nr);
+				if (artikel instanceof Massengutartikel) {
+					Massengutartikel massengutArtikel = (Massengutartikel) artikel;
+					System.out.println("Die neue Menge nur in Vielfachen dieser Packungsgröße: " + massengutArtikel.getPackungsGroesse());
+					System.out.print("Neue Menge: ");
+					int neueMenge = liesIntEingabe();
+					shop.artikelBestandAendern((Kunde) eingeloggterBenutzer, massengutArtikel, neueMenge);
+					System.out.println("Artikelbestand wurde geändert.");
+				} else {
+					System.out.print("Neue Menge: ");
+					int neueMenge = liesIntEingabe();
+					shop.artikelBestandAendern((Kunde) eingeloggterBenutzer, artikel, neueMenge);
+					System.out.println("Artikelbestand wurde geändert.");
+				}
+			} catch (FalscheEingabeTypException | ArtikelNichtImWarenkorbGefunden e) {
+				System.out.println("Fehler: " + e.getMessage());
+			} catch (NichtGenuegendBestandException | BestandPasstNichtMitPackungsGroesseException e) {
+				System.out.println("Fehler beim Aktualisieren des Bestands: " + e.getMessage());
+			}
 
 	}
 
@@ -382,9 +425,8 @@ public class BibClientCUI {
 					((Massengutartikel) artikel).setPackungsGroesse(packungsgroesse);
 				}
 
+				shop.schreibeArtikel();
 				System.out.println("Artikel wurde erfolgreich aktualisiert.");
-			} else {
-				System.out.println("Artikel mit der Nummer " + nr + " wurde nicht gefunden.");
 			}
 
 		} catch (FalscheEingabeTypException e) {
